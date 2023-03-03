@@ -3,7 +3,7 @@ up:
 build:
 	docker compose build
 init:
-	cp .env.example .env
+	cp .env.development .env
 	docker compose up -d --build
 	docker compose exec app composer install
 	docker compose exec app php artisan key:generate
