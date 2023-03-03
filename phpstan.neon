@@ -1,0 +1,15 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+parameters:
+    level: max # please check Rule Levels https://phpstan.org/user-guide/rule-levels
+    paths:
+        - app
+    excludePaths:
+        - ./app/Providers
+        - ./app/Http/Middleware
+        - ./app/Packages/Shared
+        - ./app/Packages/Presentations/Controllers/Actions
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    bootstrapFiles:
+        - vendor/autoload.php

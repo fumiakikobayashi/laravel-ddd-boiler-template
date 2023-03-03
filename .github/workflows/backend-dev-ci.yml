@@ -1,0 +1,72 @@
+name: backend auto test
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'fix/**'
+      - 'bug/**'
+      - 'refact/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:latest
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_DATABASE: ${{ secrets.CI_DB_DATABASE }}
+          MYSQL_USER: ${{ secrets.CI_DB_USERNAME }}
+          MYSQL_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+
+    env:
+      DB_CONNECTION: mysql
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: ${{ secrets.CI_DB_DATABASE }}
+      DB_USERNAME: ${{ secrets.CI_DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache modules
+        uses: actions/cache@v3
+        id: cache_composer
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1.14'
+          tools: composer:v2
+
+      - name: Composer install
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: composer install --ignore-platform-reqs
+
+      - name: Composer dump-autoload
+        run: composer dump-autoload -q
+
+      - name: Laravel settings
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          chmod -R 777 storage bootstrap/cache
+
+      - name: Laravel migrate
+        run: php artisan migrate:fresh --seed
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=3G
