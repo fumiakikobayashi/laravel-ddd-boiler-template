@@ -72,13 +72,13 @@ class Handler extends ExceptionHandler
         }
         if ($e instanceof DomainException) {
             return response()->json([
-                'message' => 'DOMAIN_EXCEPTION'
+                'message' => $e->getMessage()
             ], $e->getCode());
         }
 
         // 想定外のエラー
         return response()->json([
-            'message' => 'INTERNAL_SERVER_ERROR'
-        ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            'message' => $e->getMessage()
+        ], 500);
     }
 }
